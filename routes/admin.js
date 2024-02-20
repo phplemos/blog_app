@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 require('../models/Categoria');
-const CategoriaModel = mongoose.model("categorias");
+const CategoriaModel = mongoose.model('categorias');
+require('../models/Postagem')
+const PostagemModel = mongoose.model('postagens')
 
 
 router.get('/', (req, res) => {
@@ -61,14 +63,12 @@ router.post('/categorias/nova', (req, res) => {
             nome: req.body.nome,
             slug: req.body.slug
         }
-        const novaCategoria = new CategoriaModel(reqCategoria);
-        novaCategoria.save().then(() => {
+        new CategoriaModel(reqCategoria).save().then(() => {
             req.flash('success_msg', 'Categoria criada com sucesso!');
             res.redirect('/admin/categorias');
         }).catch((err) => {
             req.flash('error_msg', 'Houve um erro ao salvar a categoria, tente novamente!')
-            console.log(err);
-            res.redirect('/admin')
+            res.redirect('/admin/categorias')
         });
 
     }
@@ -77,7 +77,6 @@ router.post('/categorias/nova', (req, res) => {
 
 router.get('/categorias/edit/:id', (req, res) => {
     CategoriaModel.findOne({ _id: req.params.id }).then((categoria) => {
-        let response = { nome: categoria.nome };
         res.render('admin/editcategorias', {
             categoria: {
                 id: req.params.id,
@@ -87,7 +86,6 @@ router.get('/categorias/edit/:id', (req, res) => {
         });
     }).catch((err) => {
         req.flash('error_msg', 'Essa categoria não existe');
-        console.log(err);
         res.redirect('/admin/categorias');
     });
 });
@@ -122,11 +120,70 @@ router.post('/categorias/deletar',(req,res)=>{
 });
 
 router.get('/postagens',(req,res)=>{
-    res.render('admin/postagens');
+    PostagemModel.find().populate('categorias').exec().then((postagens)=>{
+        console.log(postagens)
+        let listPostagens = [];
+        postagens.map((postagem)=>{
+            listPostagens.push({
+                titulo:postagem.titulo,
+                slug: postagem.slug,
+                descricao:postagem.descricao,
+                conteudo:postagem.conteudo,
+                data:postagem.data,
+                categoria:postagem.categoria
+            });
+            console.log(listPostagens);
+        });
+        res.render('admin/postagens',{postagens: listPostagens});
+    }).catch((err)=>{
+        console.log(err);
+        req.flash('error_msg','Houve um erro ao listar as postagens');
+        res.redirect('/admin')
+    })
 });
 
 router.get('/postagens/add',(req,res)=>{
-    res.render('admin/addpostagens')
+    CategoriaModel.find().then((categoria)=>{
+        listCategorias = [];
+        categoria.map((categoria) => {
+            listCategorias.push({
+                id: categoria.id,
+                nome: categoria.nome,
+                slug: categoria.slug,
+                date: categoria.date
+            });
+        });        
+
+        res.render('admin/addpostagens',{categorias:listCategorias});
+    }).catch((err)=>{
+        req.flash('error_msg','Houve um erro ao listar as categorias');
+        res.redirect('/admin/postagens');
+    });
 });
+
+router.post('/postagens/nova',(req,res)=>{
+    let erros = []
+    if(req.body.categoria ==0){
+        erros.push({text:"Categoria invalida, registre uma categoria"});
+    }
+    if(erros.length > 0){
+        res.render('admin/addpostagens',{erros:erros})
+    }else {
+        const reqPostagem = {
+            titulo:req.body.titulo,
+            slug:req.body.slug,
+            descricao: req.body.descricao,
+            conteudo: req.body.conteudo,
+            categoria:req.body.categoria,
+        }
+        new PostagemModel(reqPostagem).save().then(()=>{  
+            req.flash('success_msg','Postagem registrada com sucesso!');
+            res.redirect('/admin/postagens');
+        }).catch((err)=>{
+            req.flash('error_msg','Erro ao cadastrar a postagem');
+            res.redirect('/admin/postagens');
+        });
+    }
+})
 
 module.exports = router;
