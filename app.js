@@ -31,7 +31,7 @@ app.engine('handlebars', handlebars.engine({ defaultLayout: 'main' }));
 app.set('view engine', 'handlebars');
 // Mongoose
 mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://172.18.0.2:27017/blogapp')
+mongoose.connect('mongodb://172.19.0.2:27017/blogapp')
     .then(() => console.log('Conectado ao Mongo'))
     .catch((err) => console.log(`Erro: ${err}`));
 // Public

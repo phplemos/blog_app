@@ -18,11 +18,12 @@ const Postagem = new Schema({
         type:String,
         required:true
     },
-    categoria:[{
+    categoria:{
         type: Schema.Types.ObjectId,
         ref:'categorias',
-        required:true
-    }],
+        required:true,
+        strictPopulate:true
+    },
     data:{
         type:Date,
         default:Date.now()
