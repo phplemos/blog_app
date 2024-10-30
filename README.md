@@ -1,3 +1,4 @@
+[ Projeto encerrado ]
 # Blog em JavaScript
 Desenvolvendo esse projeto com intuito de aprender um pouco sobre como funciona o Express.JS.
 
